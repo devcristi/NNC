@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "loss.h": "c",
+        "forward.h": "c"
+    }
+}
