@@ -4,12 +4,11 @@
 #include "./include/relu.h"
 #include "./include/loss.h"
 #include "./include/forward.h"
+#include "./include/backpropagation.h"
 
-// Funcție pentru determinarea indexului clasei cu probabilitate maximă
 int predict_label(float *probs, int size) {
     int max_index = 0;
     float max_value = probs[0];
-
     for (int i = 1; i < size; i++) {
         if (probs[i] > max_value) {
             max_value = probs[i];
@@ -20,63 +19,48 @@ int predict_label(float *probs, int size) {
 }
 
 int main() {
-    NeuralNetwork *nn = create_neural_network(2, (int[]){4, 3});
+    NeuralNetwork *nn = create_neural_network(3, (int[]){2, 4, 1});
+
     if (!nn) {
         fprintf(stderr, "Failed to create neural network\n");
         return 1;
     }
 
-    printf("Neural network created with %d layer(s)\n", nn->num_layers);
-    for (int i = 0; i < nn->num_layers; i++) {
-        Layer *l = nn->layers[i];
-        printf("Layer %d: input = %d, output = %d\n", i, l->input_size, l->output_size);
+    float inputs[4][2] = {
+        {0.0f, 0.0f},
+        {0.0f, 1.0f},
+        {1.0f, 0.0f},
+        {1.0f, 1.0f}
+    };
 
-        for (int n = 0; n < l->output_size; n++) {
-            printf("  Neuron %d weights: ", n);
-            for (int w = 0; w < l->input_size; w++) {
-                printf("%.2f ", l->weights[n][w]);
-            }
-            printf("\n");
+    float targets[4][1] = {
+        {0.0f},
+        {1.0f},
+        {1.0f},
+        {0.0f}
+    };
+
+    int epochs = 50000;
+    float learning_rate = 0.1f;
+
+    for (int epoch = 0; epoch < epochs; epoch++) {
+        float total_loss = 0.0f;
+        for (int i = 0; i < 4; i++) {
+            forward_neural_network(nn, inputs[i]);
+            total_loss += cross_entropy_loss(nn->layers[nn->num_layers - 1]->output, targets[i], 1);
+            backpropagation(nn, inputs[i], targets[i], learning_rate);
+        }
+        if (epoch % 1000 == 0) {
+            printf("Epoch %d, Loss: %.6f\n", epoch, total_loss / 4);
         }
     }
 
-    // Forward pass cu input arbitrar
-    float input[] = {1.0f, 0.5f, -0.5f, 0.0f};
-    forward_neural_network(nn, input);
-
-    printf("\nOutput of the last layer:\n");
-    Layer *last_layer = nn->layers[nn->num_layers - 1];
-    for (int i = 0; i < last_layer->output_size; i++) {
-        printf("%.4f ", last_layer->output[i]);
+    printf("\nTesting network on XOR inputs:\n");
+    for (int i = 0; i < 4; i++) {
+        forward_neural_network(nn, inputs[i]);
+        float *output = nn->layers[nn->num_layers - 1]->output;
+        printf("Input: %.1f %.1f -> Output: %.4f\n", inputs[i][0], inputs[i][1], output[0]);
     }
-    printf("\n");
-
-    // Aplicăm ReLU (doar ca test, inutil pe output softmax)
-    printf("\nApplying ReLU activation (for demo only):\n");
-    for (int i = 0; i < last_layer->output_size; i++) {
-        last_layer->output[i] = relu(last_layer->output[i]);
-        printf("%.4f ", last_layer->output[i]);
-    }
-    printf("\n");
-
-    // Test cu softmax și cross-entropy loss
-    float logits[] = {2.5f, 0.3f, -1.2f};
-    float probs[3];
-    float target[] = {0.0f, 1.0f, 0.0f};  // Clasa corectă: 1
-
-    softmax(logits, probs, 3);
-
-    printf("\nSoftmax output for logits {2.5, 0.3, -1.2}:\n");
-    for (int i = 0; i < 3; i++) {
-        printf("%.4f ", probs[i]);
-    }
-    printf("\n");
-
-    float loss = cross_entropy_loss(probs, target, 3);
-    printf("Cross-entropy loss: %.6f\n", loss);
-
-    int predicted = predict_label(probs, 3);
-    printf("Predicted class: %d\n", predicted);
 
     free_neural_network(nn);
     return 0;

@@ -30,3 +30,17 @@ void softmax(float *input, float *output, int size)
         output[i] /= sum;
     }
 }
+
+float binary_cross_entropy_loss(float prediction, float target) {
+    return -(target * logf(prediction + 1e-9f) + (1.0f - target) * logf(1.0f - prediction + 1e-9f));
+}
+
+float sigmoid(float x) {
+    return 1.0f / (1.0f + expf(-x));
+}
+
+
+float sigmoid_derivative(float x) {
+    float s = sigmoid(x);
+    return s * (1.0f - s);
+}

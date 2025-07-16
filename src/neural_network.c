@@ -62,6 +62,7 @@ Layer *create_layer(int input_size, int output_size)
         free(layer->weights);
         free(layer->output); // chiar dacă NULL e safe
         free(layer->delta);
+        // !free(layer->z);
         free(layer);
         return NULL;
     }
@@ -84,6 +85,7 @@ void free_layer(Layer *layer)
     free(layer->biases);
     free(layer->output);
     free(layer->delta);
+    //! free(layer->z);
 
     // eliberezi structura în sine
     free(layer);

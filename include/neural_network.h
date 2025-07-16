@@ -10,7 +10,7 @@ typedef struct
 
     float **weights; //** matricea de greutati weights[output_size][input_size]
     float *biases;   //** vectorul de biasuri biases[output_size]
-
+    // !float *z;
     //? pt backpropagation
     float *output; //** vectorul de iesire output[output_size]
     float *delta;  //** eroarea locală a layer-ului [output_size]
